@@ -1,0 +1,1470 @@
+<!DOC<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>数计院宿管部一站式智慧系统 | 支持Chrome大存储</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', 'PingFang SC', Roboto, sans-serif;
+            background: linear-gradient(145deg, #1a4d2a 0%, #2c5e3a 50%, #1e3a2a 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle at 20% 40%, rgba(255,235,180,0.08) 2%, transparent 2.5%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .auth-card h2 {
+            color: #1a4d2a;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .auth-tab.active {
+            background: #c9a03d;
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 40px;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #1a4d2a;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .user-info-bar {
+            background: rgba(30,45,30,0.9);
+            border-radius: 40px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-info-bar span {
+            color: #f5e6b8;
+        }
+
+        .logout-btn {
+            background: #c9a03d;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        .header {
+            background: rgba(30, 45, 30, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 18px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            color: #f5e6b8;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+        }
+
+        .panel { display: none; animation: fadeIn 0.25s ease; }
+        .panel.active { display: block; }
+
+        .card {
+            background: rgba(255, 255, 245, 0.96);
+            border-radius: 28px;
+            padding: 24px;
+            margin-bottom: 28px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            color: #1a4d2a;
+            border-left: 7px solid #c9a03d;
+            padding-left: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 16px;
+            margin: 8px 0 16px;
+            border: 1px solid #bbb;
+            border-radius: 40px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #c9a03d;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px 6px 0 0;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #b07e2a;
+            transform: scale(1.02);
+        }
+
+        button.danger {
+            background: #dc3545;
+            color: white;
+        }
+        button.danger:hover {
+            background: #a71d2a;
+        }
+        button.warning {
+            background: #fd7e14;
+            color: white;
+        }
+        button.success {
+            background: #28a745;
+            color: white;
+        }
+
+        .two-col { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+        .three-col { display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+        .drop-zone {
+            border: 2px dashed #c9a03d;
+            border-radius: 28px;
+            padding: 20px;
+            text-align: center;
+            background: #fef9e6;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .file-list {
+            background: #fef9e6;
+            border-radius: 24px;
+            padding: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .file-item {
+            border-bottom: 1px solid #e0d0a0;
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .notice-board {
+            background: #fff3cf;
+            border-radius: 24px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .preview-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .badge {
+            background: #c9a03d;
+            border-radius: 30px;
+            padding: 2px 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .warning-note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+        .backup-note {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+        .storage-warning-note {
+            background: #fff3cd;
+            border-left: 4px solid #fd7e14;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+        .storage-danger-note {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+        .info-note {
+            background: #cfe2ff;
+            border-left: 4px solid #0d6efd;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        hr { margin: 16px 0; border-color: #e0d5b0; }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .filter-bar select, .filter-bar input {
+            width: auto;
+            flex: 1;
+            min-width: 150px;
+            margin: 0;
+        }
+        .stat-card {
+            background: #e8f0e0;
+            border-radius: 20px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            overflow: auto;
+        }
+        .modal-content img, .modal-content video, .modal-content audio { max-width: 100%; max-height: 80vh; }
+        .modal-content iframe { width: 100%; height: 80vh; border: none; }
+        .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; }
+        .preview-btn { background: #4a7c59; color: white; font-size: 12px; padding: 4px 12px; }
+
+        .message-item {
+            border-bottom: 1px solid #e0d0a0;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #faf7e4;
+            border-radius: 16px;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        .message-content { font-size: 15px; margin-bottom: 8px; }
+        .reply-area { margin-top: 8px; padding-left: 16px; border-left: 3px solid #c9a03d; }
+        .reply-text { font-size: 13px; color: #4a7c59; background: #e8f0e0; padding: 8px; border-radius: 12px; margin-top: 5px; }
+        .reply-input { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .reply-input input { flex: 1; margin: 0; padding: 6px 12px; }
+        .reply-input button { margin: 0; padding: 6px 16px; }
+
+        .batch-bar {
+            background: #e8f0e0;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .batch-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .download-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .storage-bar {
+            background: #e9ecef;
+            border-radius: 20px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .storage-used {
+            background: #28a745;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .storage-used.warning {
+            background: #fd7e14;
+        }
+        .storage-used.danger {
+            background: #dc3545;
+        }
+        
+        /* Chrome存储申请按钮 */
+        .chrome-storage-btn {
+            background: #4285f4;
+            color: white;
+            margin-left: 10px;
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+        .chrome-storage-btn:hover {
+            background: #3367d6;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <h2><i class="fas fa-building"></i> 数计院宿管部一站式智慧系统</h2>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">学生注册</button>
+            </div>
+            <div id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="用户名/工号">
+                <input type="password" id="loginPassword" placeholder="密码">
+                <button onclick="doLogin()">登录</button>
+                <div class="warning-note" style="margin-top:15px;">
+                    <i class="fas fa-info-circle"></i> 宿管账号：<strong>dorm_admin_2025</strong>
+                </div>
+            </div>
+            <div id="registerForm" class="auth-form">
+                <input type="text" id="regUsername" placeholder="用户名">
+                <input type="password" id="regPassword" placeholder="密码">
+                <input type="text" id="regRealName" placeholder="真实姓名">
+                <input type="text" id="regStuId" placeholder="学号">
+                <input type="text" id="regClass" placeholder="班级">
+                <input type="tel" id="regPhone" placeholder="联系电话">
+                <button onclick="doStudentRegister()">注册学生账号</button>
+                <div class="warning-note"><i class="fas fa-graduation-cap"></i> 仅限学生注册</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainContent" style="display:none;">
+        <div class="header">
+            <div class="logo"><h1><i class="fas fa-building"></i> 宿管部 · 智慧一站式办公</h1></div>
+            <div class="user-info-bar">
+                <span><i class="fas fa-user"></i> <span id="currentUserName">加载中...</span></span>
+                <span class="badge" id="currentUserRoleBadge">读者端</span>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+            </div>
+        </div>
+
+        <!-- 读者端 -->
+        <div id="readerPanel" class="panel">
+            <div class="card"><h2><i class="fas fa-bullhorn"></i> 宿管部公告</h2><div id="noticeBoard" class="notice-board">加载中...</div></div>
+            <div class="card">
+                <h2><i class="fas fa-upload"></i> 比赛申报 & 资料上传</h2>
+                <div class="two-col">
+                    <div>
+                        <h3>🏆 参赛作品申报</h3>
+                        <input type="text" id="stuName" placeholder="姓名" readonly style="background:#f0f0f0;">
+                        <input type="text" id="stuId" placeholder="学号" readonly style="background:#f0f0f0;">
+                        <input type="text" id="stuClass" placeholder="班级" readonly style="background:#f0f0f0;">
+                        <input type="text" id="workTitle" placeholder="规范的作品名 *">
+                        <input type="tel" id="stuPhone" placeholder="联系电话" readonly style="background:#f0f0f0;">
+                        <div id="compDropZone" class="drop-zone" onclick="document.getElementById('compFile').click()">
+                            <i class="fas fa-cloud-upload-alt fa-2x"></i><p>点击或拖拽文件上传</p>
+                        </div>
+                        <input type="file" id="compFile" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.mp3,.mp4">
+                        <div id="compPreview" class="file-preview"></div>
+                        <button onclick="submitCompetition()">提交参赛作品</button>
+                    </div>
+                    <div>
+                        <h3>📂 档案资料上传</h3>
+                        <input type="text" id="dataTitle" placeholder="资料名称">
+                        <div id="archiveDropZone" class="drop-zone" onclick="document.getElementById('dataFile').click()">点击或拖拽文件</div>
+                        <input type="file" id="dataFile" style="display:none">
+                        <button onclick="submitArchive()">上传至档案库</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> 作品审核进度查询</h2>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <input type="text" id="queryName" placeholder="姓名" style="flex:1">
+                    <input type="text" id="queryStuId" placeholder="学号" style="flex:1">
+                    <button onclick="queryScore()">查询</button>
+                </div>
+                <div id="queryResult" style="margin-top: 18px; background:#faf7e4; border-radius: 24px; padding: 16px;"></div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-envelope-open-text"></i> 退修意见 & 模板下载</h2>
+                <div id="reworkArea">暂无退修通知</div>
+                <hr><div id="templateArea">加载中...</div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-comments"></i> 读者留言板</h2>
+                <textarea id="msgText" rows="2" placeholder="写下您的建议或问题..."></textarea>
+                <button onclick="sendMessage()">提交留言</button>
+                <div id="msgList" style="margin-top: 16px;"></div>
+            </div>
+        </div>
+
+        <!-- 编辑端 -->
+        <div id="editorPanel" class="panel">
+            <div class="card"><h2><i class="fas fa-broadcast-tower"></i> 发布通知</h2><textarea id="editorNotice" rows="2"></textarea><button onclick="publishNotice()">发布</button></div>
+            
+            <!-- 数据管理 + 备份提醒 + 存储提醒 + Chrome存储申请 -->
+            <div class="card">
+                <h2><i class="fas fa-database"></i> 数据管理 & 定期备份</h2>
+                
+                <!-- Chrome存储空间申请区域 -->
+                <div id="chromeStorageArea" style="display:none;"></div>
+                
+                <!-- 存储空间自动提醒 -->
+                <div id="storageReminder" style="display:none;"></div>
+                
+                <!-- 备份提醒 -->
+                <div id="backupReminder" class="backup-note" style="display:none;">
+                    <i class="fas fa-bell"></i> <strong>⚠️ 上次备份已超过7天！</strong> 建议立即导出备份数据。
+                </div>
+                <div id="backupSuccess" class="backup-note" style="display:none; background:#c3e6cb;">
+                    <i class="fas fa-check-circle"></i> ✅ 备份成功！记得保存下载的文件到电脑或U盘。
+                </div>
+                
+                <!-- 存储空间显示 -->
+                <div style="margin: 15px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span><i class="fas fa-hdd"></i> 存储空间使用情况 
+                            <span id="browserType" style="font-size:11px; color:#666;"></span>
+                        </span>
+                        <span id="storagePercent">0%</span>
+                    </div>
+                    <div class="storage-bar">
+                        <div id="storageBar" class="storage-used" style="width:0%"></div>
+                    </div>
+                    <div id="storageInfo" style="font-size:12px; color:#666;"></div>
+                </div>
+                
+                <div class="batch-bar">
+                    <span><i class="fas fa-chart-simple"></i> 当前数据统计</span>
+                    <div class="batch-actions">
+                        <button class="warning" onclick="clearCompetitions()"><i class="fas fa-trash"></i> 清空作品</button>
+                        <button class="warning" onclick="clearArchives()"><i class="fas fa-trash"></i> 清空档案</button>
+                        <button class="warning" onclick="clearDormRecords()"><i class="fas fa-trash"></i> 清空宿舍考核</button>
+                        <button class="warning" onclick="clearMessages()"><i class="fas fa-trash"></i> 清空留言</button>
+                        <button class="danger" onclick="clearAllData()"><i class="fas fa-radiation"></i> 清空全部</button>
+                    </div>
+                </div>
+                
+                <!-- 备份区域 -->
+                <div style="background:#eef2e0; border-radius:20px; padding:15px; margin-bottom:15px;">
+                    <div style="font-weight:bold; margin-bottom:10px;"><i class="fas fa-download"></i> 📦 定期备份（建议每周备份一次）</div>
+                    <div class="download-actions">
+                        <button class="success" onclick="exportAllData()"><i class="fas fa-file-archive"></i> 📥 一键备份全部数据</button>
+                        <button class="success" onclick="downloadAllCompetitions()"><i class="fas fa-file-archive"></i> 下载参赛作品</button>
+                        <button class="success" onclick="downloadAllArchives()"><i class="fas fa-file-archive"></i> 下载档案资料</button>
+                        <button onclick="exportDormExcel()"><i class="fas fa-file-excel"></i> 导出宿舍Excel</button>
+                        <button onclick="exportCompetitionsCSV()"><i class="fas fa-file-excel"></i> 导出作品列表</button>
+                    </div>
+                    <div class="warning-note" style="margin-top:10px; font-size:12px;">
+                        <i class="fas fa-info-circle"></i> 提示：建议每周五下班前点击「一键备份全部数据」，将下载的ZIP文件保存到电脑或U盘。
+                    </div>
+                </div>
+                
+                <div class="three-col" style="font-size:14px; color:#666;">
+                    <div>📄 参赛作品: <span id="statCompetitions">0</span> 个</div>
+                    <div>📁 档案资料: <span id="statArchives">0</span> 个</div>
+                    <div>🏠 宿舍考核: <span id="statDorms">0</span> 条</div>
+                    <div>💬 留言: <span id="statMessages">0</span> 条</div>
+                    <div>📢 公告: <span id="statNotices">0</span> 条</div>
+                    <div>📋 工作日志: <span id="statLogs">0</span> 条</div>
+                </div>
+            </div>
+            
+            <!-- 留言管理模块 -->
+            <div class="card">
+                <h2><i class="fas fa-comment-dots"></i> 读者留言管理（可回复/删除）</h2>
+                <div id="messageManageList" class="file-list" style="max-height: 400px;"></div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-clipboard-list"></i> 宿舍评比考核（按月记录）</h2>
+                <div class="three-col">
+                    <div><input id="dormBuild" placeholder="楼栋（如：和园A栋）"></div>
+                    <div><input id="dormNum" placeholder="宿舍号（如：101）"></div>
+                    <div><input id="dormScore" type="number" placeholder="分数(0-100)"></div>
+                </div>
+                <div class="two-col">
+                    <div><label>📅 考核年月</label><input type="month" id="dormMonth" value="2025-03"></div>
+                    <div><label>📸 上传照片</label><input type="file" id="dormPhoto" accept="image/*"></div>
+                </div>
+                <button onclick="addDormRecord()"><i class="fas fa-plus-circle"></i> 添加考核记录</button>
+                <div class="filter-bar" style="margin-top: 20px;">
+                    <select id="filterMonth"><option value="all">全部月份</option></select>
+                    <select id="filterBuilding"><option value="all">全部楼栋</option></select>
+                    <button onclick="applyFilter()">筛选</button>
+                    <button onclick="exportDormExcel()"><i class="fas fa-file-excel"></i> 导出Excel</button>
+                </div>
+                <div class="three-col" style="margin: 15px 0;">
+                    <div class="stat-card"><i class="fas fa-building"></i> <span id="totalBuildings">0</span> 栋楼</div>
+                    <div class="stat-card"><i class="fas fa-door-open"></i> <span id="totalDorms">0</span> 间宿舍</div>
+                    <div class="stat-card"><i class="fas fa-chart-line"></i> 平均分: <span id="avgScore">0</span></div>
+                </div>
+                <div id="dormListArea" class="file-list"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-star"></i> 参赛作品审核 & 评分（支持预览）</h2>
+                <div class="two-col">
+                    <div><input id="compCategoryInput" placeholder="自定义分类标准"></div>
+                    <div><input id="reviewScore" type="number" placeholder="评委打分"><button onclick="addScoreToFirst()">加分</button></div>
+                </div>
+                <button onclick="applyCompCategory()">应用半自动分类</button>
+                <button onclick="calculateRanking()">计算排名(去高低分)</button>
+                <div id="rankingResult" style="margin:12px 0; background:#f0f2e0; border-radius:20px; padding:12px;"></div>
+                <div id="competitionManageList" class="file-list"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-archive"></i> 档案库管理</h2>
+                <div class="two-col">
+                    <div><input id="archiveCustomClass" placeholder="自定义分类标准"><button onclick="applyArchiveCategory()">分类</button></div>
+                    <div><input type="file" id="editorUploadArchive"><button onclick="uploadEditorArchive()">上传档案</button></div>
+                </div>
+                <div id="archiveManageList" class="file-list"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-calendar-week"></i> 工作任务安排</h2>
+                <textarea id="workPlanText" rows="3"></textarea><button onclick="saveWorkPlan()">保存并公示</button>
+                <div id="workPlanDisplay" style="background:#eef2e0; border-radius:24px; padding:16px; margin-top:16px;"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-handshake"></i> 协同办公 & 工作日志</h2>
+                <button onclick="alert('协同环境已开启')">启动协同插件</button>
+                <textarea id="logText" rows="2" style="margin-top:12px"></textarea><button onclick="addWorkLog()">添加日志</button>
+                <div id="workLogArea" class="notice-board" style="margin-top:12px"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 预览模态框 -->
+<div id="previewModal" class="modal" onclick="closeModal()">
+    <span class="close-modal">&times;</span>
+    <div class="modal-content" onclick="event.stopPropagation()" id="previewContent"></div>
+</div>
+
+<script>
+    // ========== 固定编辑端账号 ==========
+    const EDITOR_ACCOUNT = { username: "dorm_admin_2025", password: "Sg@2025#Admin!", realName: "宿管部管理员" };
+    
+    let students = [];
+    let currentUser = null;
+    
+    let db = {
+        notices: ["欢迎使用数计院宿管部一站式智慧系统！建议每周备份数据。"],
+        competitions: [],
+        archives: [],
+        reworks: [],
+        templates: [{name: "参赛作品格式模板.docx"}, {name: "宿舍申报表范例.pdf"}, {name: "评分标准细则.xlsx"}],
+        messages: [],
+        dormRecords: [],
+        workPlan: "本学期工作重点：宿舍文明月（3-4月）、学风建设评比（5月）。",
+        workLogs: [],
+        compCategoryRule: "默认分类",
+        archiveCategoryRule: "默认",
+        lastBackupDate: null
+    };
+    
+    // ========== Chrome持久化存储申请 ==========
+    let isPersistentStorage = false;
+    
+    async function requestPersistentStorage() {
+        if (!navigator.storage || !navigator.storage.persist) {
+            console.log("当前浏览器不支持持久化存储API");
+            return false;
+        }
+        
+        // 检查是否已经是持久化
+        let isPersisted = await navigator.storage.persisted();
+        if (isPersisted) {
+            console.log("已经是持久化存储模式");
+            isPersistentStorage = true;
+            updateChromeStorageUI(true);
+            return true;
+        }
+        
+        // 请求持久化存储
+        try {
+            let granted = await navigator.storage.persist();
+            if (granted) {
+                console.log("✅ 已获得持久化存储权限，可以获得更大的存储空间！");
+                isPersistentStorage = true;
+                updateChromeStorageUI(true);
+                alert("✅ 成功申请持久化存储！现在可以获得更大的存储空间（Chrome可支持10-15MB）。");
+                calculateStorageSize(); // 重新计算显示
+            } else {
+                console.log("❌ 用户拒绝了持久化存储请求");
+                updateChromeStorageUI(false);
+                alert("您拒绝了存储权限申请。如需更大空间，可点击地址栏右侧的图标手动允许。");
+            }
+            return granted;
+        } catch (err) {
+            console.error("申请持久化存储失败:", err);
+            updateChromeStorageUI(false);
+            return false;
+        }
+    }
+    
+    function updateChromeStorageUI(isGranted) {
+        let chromeArea = document.getElementById("chromeStorageArea");
+        if (!chromeArea) return;
+        
+        let isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        
+        if (!isChrome) {
+            chromeArea.style.display = "none";
+            return;
+        }
+        
+        if (isGranted) {
+            chromeArea.innerHTML = `
+                <div class="info-note" style="background:#d4edda; border-left-color:#28a745;">
+                    <i class="fas fa-check-circle"></i> <strong>✅ Chrome持久化存储已启用！</strong><br>
+                    您已获得更大的存储空间（约10-15MB），可以放心使用。
+                </div>
+            `;
+            chromeArea.style.display = "block";
+        } else {
+            chromeArea.innerHTML = `
+                <div class="info-note">
+                    <i class="fab fa-chrome"></i> <strong>Chrome用户可获得更大存储空间！</strong><br>
+                    点击下方按钮申请持久化存储，可让存储空间从5MB提升到10-15MB。
+                    <button class="chrome-storage-btn" onclick="requestPersistentStorage()" style="display:block; margin-top:8px;">
+                        <i class="fas fa-expand-arrows-alt"></i> 申请更大存储空间
+                    </button>
+                </div>
+            `;
+            chromeArea.style.display = "block";
+        }
+    }
+    
+    // 获取存储配额信息
+    async function getStorageQuota() {
+        if (navigator.storage && navigator.storage.estimate) {
+            try {
+                let estimate = await navigator.storage.estimate();
+                console.log("存储配额:", estimate.quota, "已使用:", estimate.usage);
+                return estimate;
+            } catch(e) {
+                return null;
+            }
+        }
+        return null;
+    }
+    
+    // 显示存储空间提醒
+    function showStorageReminder(percent, sizeMB) {
+        let reminderDiv = document.getElementById("storageReminder");
+        if (!reminderDiv) return;
+        
+        if (percent >= 80) {
+            reminderDiv.innerHTML = `
+                <div class="storage-danger-note">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>🔴 存储空间严重不足！</strong> 已使用 ${percent.toFixed(1)}% (约 ${sizeMB} MB)<br>
+                    请立即备份数据并删除不需要的文件，否则将无法继续上传！
+                </div>
+            `;
+            reminderDiv.style.display = "block";
+        } else if (percent >= 60) {
+            reminderDiv.innerHTML = `
+                <div class="storage-warning-note">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>⚠️ 存储空间已使用 ${percent.toFixed(1)}%！</strong> (约 ${sizeMB} MB)<br>
+                    建议及时备份并清理不必要的数据，以免影响正常使用。
+                </div>
+            `;
+            reminderDiv.style.display = "block";
+        } else {
+            reminderDiv.style.display = "none";
+        }
+    }
+    
+    async function calculateStorageSize() {
+        try {
+            let total = 0;
+            let data = localStorage.getItem("dormSystemFull");
+            if (data) total += data.length * 2;
+            let studentsData = localStorage.getItem("dormStudents");
+            if (studentsData) total += studentsData.length * 2;
+            let currentUserData = localStorage.getItem("currentUser");
+            if (currentUserData) total += currentUserData.length * 2;
+            
+            // 获取浏览器配额信息
+            let quota = 5 * 1024 * 1024; // 默认5MB
+            let quotaInfo = await getStorageQuota();
+            if (quotaInfo && quotaInfo.quota) {
+                quota = quotaInfo.quota;
+                let quotaMB = (quota / (1024 * 1024)).toFixed(1);
+                document.getElementById("browserType").innerHTML = `(限额约 ${quotaMB} MB)`;
+            } else {
+                document.getElementById("browserType").innerHTML = `(Chrome可点上方按钮扩至15MB)`;
+            }
+            
+            let percent = Math.min(100, (total / quota) * 100);
+            let sizeMB = (total / (1024 * 1024)).toFixed(2);
+            let quotaMB = (quota / (1024 * 1024)).toFixed(1);
+            
+            let storageBar = document.getElementById("storageBar");
+            let storagePercent = document.getElementById("storagePercent");
+            let storageInfo = document.getElementById("storageInfo");
+            
+            if (storageBar) {
+                storageBar.style.width = percent + "%";
+                if (percent >= 80) {
+                    storageBar.classList.add("danger");
+                    storageBar.classList.remove("warning");
+                } else if (percent >= 60) {
+                    storageBar.classList.add("warning");
+                    storageBar.classList.remove("danger");
+                } else {
+                    storageBar.classList.remove("warning", "danger");
+                }
+            }
+            if (storagePercent) storagePercent.innerText = percent.toFixed(1) + "%";
+            
+            if (storageInfo) {
+                storageInfo.innerHTML = `已使用约 ${sizeMB} MB / 限额约 ${quotaMB} MB`;
+                if (percent >= 80) {
+                    storageInfo.innerHTML += ` <span style="color:#dc3545;">🔴 严重不足！请立即清理！</span>`;
+                } else if (percent >= 60) {
+                    storageInfo.innerHTML += ` <span style="color:#fd7e14;">⚠️ 建议清理</span>`;
+                }
+                if (isPersistentStorage) {
+                    storageInfo.innerHTML += ` <span style="color:#28a745;">✅ 持久化已启用</span>`;
+                }
+            }
+            
+            showStorageReminder(percent, sizeMB);
+            
+            return percent;
+        } catch(e) { 
+            console.log("计算存储失败"); 
+            return 0;
+        }
+    }
+    
+    // 备份提醒相关
+    function checkBackupReminder() {
+        if (!currentUser || currentUser.role !== "editor") return;
+        let lastBackup = localStorage.getItem("lastBackupDate");
+        let reminderDiv = document.getElementById("backupReminder");
+        if (!lastBackup) {
+            if (reminderDiv) reminderDiv.style.display = "block";
+            return;
+        }
+        let lastDate = new Date(lastBackup);
+        let now = new Date();
+        let daysDiff = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+        if (daysDiff >= 7) {
+            if (reminderDiv) reminderDiv.style.display = "block";
+        } else {
+            if (reminderDiv) reminderDiv.style.display = "none";
+        }
+    }
+    
+    function updateBackupDate() {
+        let now = new Date().toISOString();
+        localStorage.setItem("lastBackupDate", now);
+        let reminderDiv = document.getElementById("backupReminder");
+        if (reminderDiv) reminderDiv.style.display = "none";
+        let successDiv = document.getElementById("backupSuccess");
+        if (successDiv) {
+            successDiv.style.display = "block";
+            setTimeout(() => { successDiv.style.display = "none"; }, 5000);
+        }
+    }
+    
+    // 一键备份全部数据
+    async function exportAllData() {
+        let zip = new JSZip();
+        let fileCount = 0;
+        
+        let compFiles = db.competitions.filter(c => c.fileData && c.fileName && c.fileName !== "无文件");
+        for (let comp of compFiles) {
+            try {
+                let fileName = `参赛作品/${comp.name}_${comp.title}_${comp.fileName}`;
+                let base64Data = comp.fileData.split(',')[1];
+                if (base64Data) {
+                    let binaryData = atob(base64Data);
+                    let array = new Uint8Array(binaryData.length);
+                    for (let i = 0; i < binaryData.length; i++) array[i] = binaryData.charCodeAt(i);
+                    zip.file(fileName, array);
+                    fileCount++;
+                }
+            } catch(e) {}
+        }
+        
+        let archFiles = db.archives.filter(a => a.fileData && a.fileName);
+        for (let arch of archFiles) {
+            try {
+                let fileName = `档案资料/${arch.name}_${arch.fileName}`;
+                let base64Data = arch.fileData.split(',')[1];
+                if (base64Data) {
+                    let binaryData = atob(base64Data);
+                    let array = new Uint8Array(binaryData.length);
+                    for (let i = 0; i < binaryData.length; i++) array[i] = binaryData.charCodeAt(i);
+                    zip.file(fileName, array);
+                    fileCount++;
+                }
+            } catch(e) {}
+        }
+        
+        let dormCSV = "楼栋,宿舍号,分数,考核年月,记录时间\n" + db.dormRecords.map(d => `${d.build},${d.num},${d.score},${d.month},${d.date || ""}`).join("\n");
+        zip.file("宿舍考核记录.csv", "\uFEFF" + dormCSV);
+        let compCSV = "作品名,作者,学号,状态,分数,分类\n" + db.competitions.map(c => `${c.title},${c.name},${c.stuId},${c.status},${c.scores?.join(";")||""},${c.category||""}`).join("\n");
+        zip.file("参赛作品列表.csv", "\uFEFF" + compCSV);
+        let archCSV = "资料名,上传者,状态,分类\n" + db.archives.map(a => `${a.name},${a.uploader||""},${a.status||""},${a.category||""}`).join("\n");
+        zip.file("档案资料列表.csv", "\uFEFF" + archCSV);
+        let msgCSV = "留言人,学号,内容,时间,回复\n" + db.messages.map(m => `${m.name},${m.stuId||""},${m.content},${m.time||""},${m.reply||""}`).join("\n");
+        zip.file("留言记录.csv", "\uFEFF" + msgCSV);
+        zip.file("工作计划.txt", db.workPlan);
+        zip.file("工作日志.txt", db.workLogs.join("\n"));
+        
+        let content = await zip.generateAsync({ type: "blob" });
+        let url = URL.createObjectURL(content);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = `宿管系统备份_${new Date().toISOString().slice(0,19).replace(/:/g, "-")}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        updateBackupDate();
+        alert(`备份成功！共打包 ${fileCount} 个文件 + 5个数据表格。`);
+    }
+    
+    function exportCompetitionsCSV() {
+        let csv = "作品名,作者,学号,状态,分数,分类\n";
+        for (let c of db.competitions) {
+            csv += `"${c.title}",${c.name},${c.stuId},${c.status},"${c.scores?.join(",")||""}",${c.category||""}\n`;
+        }
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv]));
+        a.download = `参赛作品列表_${new Date().toLocaleDateString()}.csv`;
+        a.click();
+    }
+    
+    // 原有功能...
+    function saveStudents() { localStorage.setItem("dormStudents", JSON.stringify(students)); }
+    function saveData() { localStorage.setItem("dormSystemFull", JSON.stringify(db)); }
+    
+    function loadStudents() {
+        let stored = localStorage.getItem("dormStudents");
+        if (stored) students = JSON.parse(stored);
+        else students = [{ id: 1, username: "zhangsan", password: "123456", realName: "张三", stuId: "202507224101", class: "25数本1班", phone: "13800138001" }];
+        saveStudents();
+    }
+    
+    function loadData() {
+        let data = localStorage.getItem("dormSystemFull");
+        if (data) { let loaded = JSON.parse(data); db = { ...db, ...loaded }; }
+        if (!db.dormRecords) db.dormRecords = [];
+        if (!db.workLogs) db.workLogs = [];
+        if (!db.competitions) db.competitions = [];
+        if (!db.archives) db.archives = [];
+        if (!db.messages) db.messages = [];
+        if (!db.reworks) db.reworks = [];
+        if (!db.lastBackupDate) db.lastBackupDate = null;
+    }
+    
+    function doStudentRegister() {
+        let username = document.getElementById("regUsername").value.trim();
+        let password = document.getElementById("regPassword").value;
+        let realName = document.getElementById("regRealName").value.trim();
+        let stuId = document.getElementById("regStuId").value.trim();
+        let className = document.getElementById("regClass").value.trim();
+        let phone = document.getElementById("regPhone").value.trim();
+        if (!username || !password || !realName || !stuId) return alert("请填写完整信息");
+        if (students.find(s => s.username === username)) return alert("用户名已存在");
+        students.push({ id: Date.now(), username, password, realName, stuId, class: className, phone });
+        saveStudents();
+        alert("注册成功！请登录");
+        switchAuthTab("login");
+    }
+    
+    function doLogin() {
+        let username = document.getElementById("loginUsername").value.trim();
+        let password = document.getElementById("loginPassword").value;
+        if (username === EDITOR_ACCOUNT.username && password === EDITOR_ACCOUNT.password) {
+            currentUser = { id: "editor_fixed", username, realName: EDITOR_ACCOUNT.realName, role: "editor" };
+            loginSuccess();
+            return;
+        }
+        let student = students.find(s => s.username === username && s.password === password);
+        if (student) {
+            currentUser = { id: student.id, username, realName: student.realName, role: "reader", stuId: student.stuId, class: student.class, phone: student.phone };
+            loginSuccess();
+            return;
+        }
+        alert("用户名或密码错误");
+    }
+    
+    async function loginSuccess() {
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        
+        // 自动尝试申请持久化存储（静默）
+        if (navigator.storage && navigator.storage.persisted) {
+            let isPersisted = await navigator.storage.persisted();
+            if (!isPersisted && /Chrome/.test(navigator.userAgent)) {
+                // 不自动弹窗，只是显示提示按钮
+                console.log("Chrome用户可点击按钮申请更大存储");
+            }
+            isPersistentStorage = isPersisted;
+        }
+        
+        if (currentUser.role === "reader") {
+            document.getElementById("readerPanel").classList.add("active");
+            document.getElementById("editorPanel").classList.remove("active");
+            document.getElementById("currentUserRoleBadge").innerHTML = "读者端 · 学生";
+            document.getElementById("stuName").value = currentUser.realName || "";
+            document.getElementById("stuId").value = currentUser.stuId || "";
+            document.getElementById("stuClass").value = currentUser.class || "";
+            document.getElementById("stuPhone").value = currentUser.phone || "";
+            renderReaderUI();
+        } else {
+            document.getElementById("readerPanel").classList.remove("active");
+            document.getElementById("editorPanel").classList.add("active");
+            document.getElementById("currentUserRoleBadge").innerHTML = "编辑端 · 宿管部";
+            updateFilterOptions();
+            renderEditorUI();
+            renderDormList();
+            renderMessagesManage();
+            updateStatistics();
+            checkBackupReminder();
+            calculateStorageSize();
+            updateChromeStorageUI(isPersistentStorage);
+        }
+        document.getElementById("currentUserName").innerHTML = currentUser.realName;
+        loadData();
+        renderAll();
+    }
+    
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem("currentUser");
+        document.getElementById("authOverlay").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+    }
+    
+    function checkAutoLogin() {
+        let saved = localStorage.getItem("currentUser");
+        if (saved) {
+            currentUser = JSON.parse(saved);
+            document.getElementById("authOverlay").style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+            if (currentUser.role === "reader") {
+                document.getElementById("readerPanel").classList.add("active");
+                document.getElementById("editorPanel").classList.remove("active");
+                document.getElementById("currentUserRoleBadge").innerHTML = "读者端 · 学生";
+                document.getElementById("stuName").value = currentUser.realName || "";
+                document.getElementById("stuId").value = currentUser.stuId || "";
+                document.getElementById("stuClass").value = currentUser.class || "";
+                document.getElementById("stuPhone").value = currentUser.phone || "";
+            } else {
+                document.getElementById("readerPanel").classList.remove("active");
+                document.getElementById("editorPanel").classList.add("active");
+                document.getElementById("currentUserRoleBadge").innerHTML = "编辑端 · 宿管部";
+                updateFilterOptions();
+            }
+            document.getElementById("currentUserName").innerHTML = currentUser.realName;
+            loadData();
+            renderAll();
+            if (currentUser.role === "editor") {
+                renderMessagesManage();
+                updateStatistics();
+                checkBackupReminder();
+                calculateStorageSize();
+            }
+        }
+    }
+    
+    function switchAuthTab(tab) {
+        let loginForm = document.getElementById("loginForm"), registerForm = document.getElementById("registerForm");
+        let tabs = document.querySelectorAll(".auth-tab");
+        if (tab === "login") {
+            loginForm.classList.add("active"); registerForm.classList.remove("active");
+            tabs[0].classList.add("active"); tabs[1].classList.remove("active");
+        } else {
+            loginForm.classList.remove("active"); registerForm.classList.add("active");
+            tabs[0].classList.remove("active"); tabs[1].classList.add("active");
+        }
+    }
+    
+    // 预览功能
+    function previewFile(fileUrl, fileType, fileName) {
+        let modal = document.getElementById("previewModal");
+        let content = document.getElementById("previewContent");
+        let ext = fileName.split('.').pop().toLowerCase();
+        if (fileType === 'image' || ['jpg','jpeg','png','gif','bmp','webp'].includes(ext)) {
+            content.innerHTML = `<img src="${fileUrl}" alt="预览图片">`;
+        } else if (fileType === 'pdf' || ext === 'pdf') {
+            content.innerHTML = `<iframe src="${fileUrl}" title="PDF预览"></iframe>`;
+        } else if (fileType === 'video' || ['mp4','webm','ogg'].includes(ext)) {
+            content.innerHTML = `<video controls src="${fileUrl}" style="width:100%"></video>`;
+        } else if (fileType === 'audio' || ['mp3','wav','ogg'].includes(ext)) {
+            content.innerHTML = `<audio controls src="${fileUrl}" style="width:100%"></audio>`;
+        } else {
+            content.innerHTML = `<div style="text-align:center;padding:40px;"><i class="fas fa-file-alt fa-4x"></i><p>此文件类型不支持在线预览</p><button onclick="window.open('${fileUrl}')">下载文件</button></div>`;
+        }
+        modal.classList.add("active");
+    }
+    
+    function closeModal() { document.getElementById("previewModal").classList.remove("active"); document.getElementById("previewContent").innerHTML = ""; }
+    
+    function getFileType(fileName) {
+        let ext = fileName.split('.').pop().toLowerCase();
+        if (['jpg','jpeg','png','gif','bmp','webp'].includes(ext)) return 'image';
+        if (['pdf'].includes(ext)) return 'pdf';
+        if (['mp4','webm','ogg'].includes(ext)) return 'video';
+        if (['mp3','wav','ogg'].includes(ext)) return 'audio';
+        return 'other';
+    }
+    
+    // 批量下载
+    async function downloadAllCompetitions() {
+        let files = db.competitions.filter(c => c.fileData && c.fileName && c.fileName !== "无文件");
+        if (files.length === 0) { alert("没有可下载的文件"); return; }
+        let zip = new JSZip();
+        for (let comp of files) {
+            try {
+                let fileName = `${comp.name}_${comp.title}_${comp.fileName}`;
+                let base64Data = comp.fileData.split(',')[1];
+                if (base64Data) {
+                    let binaryData = atob(base64Data);
+                    let array = new Uint8Array(binaryData.length);
+                    for (let i = 0; i < binaryData.length; i++) array[i] = binaryData.charCodeAt(i);
+                    zip.file(fileName, array);
+                }
+            } catch(e) {}
+        }
+        let content = await zip.generateAsync({ type: "blob" });
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = `参赛作品_${new Date().toISOString().slice(0,19)}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("下载成功");
+    }
+    
+    async function downloadAllArchives() {
+        let files = db.archives.filter(a => a.fileData && a.fileName);
+        if (files.length === 0) { alert("没有可下载的文件"); return; }
+        let zip = new JSZip();
+        for (let arch of files) {
+            try {
+                let fileName = `${arch.name}_${arch.fileName}`;
+                let base64Data = arch.fileData.split(',')[1];
+                if (base64Data) {
+                    let binaryData = atob(base64Data);
+                    let array = new Uint8Array(binaryData.length);
+                    for (let i = 0; i < binaryData.length; i++) array[i] = binaryData.charCodeAt(i);
+                    zip.file(fileName, array);
+                }
+            } catch(e) {}
+        }
+        let content = await zip.generateAsync({ type: "blob" });
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = `档案资料_${new Date().toISOString().slice(0,19)}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("下载成功");
+    }
+    
+    // 留言管理
+    function renderMessagesManage() {
+        let container = document.getElementById("messageManageList");
+        if (!container) return;
+        if (db.messages.length === 0) { container.innerHTML = "暂无留言"; return; }
+        container.innerHTML = db.messages.map(msg => `
+            <div class="message-item" data-id="${msg.id}">
+                <div class="message-header"><span><strong>${escapeHtml(msg.name)}</strong> (${msg.stuId || "未知学号"})</span><span>${msg.time || "未知时间"}</span></div>
+                <div class="message-content">${escapeHtml(msg.content)}</div>
+                ${msg.reply ? `<div class="reply-area"><i class="fas fa-reply-all"></i> 宿管回复：<div class="reply-text">${escapeHtml(msg.reply)}</div></div>` : ''}
+                <div class="reply-input">
+                    <input type="text" id="replyInput_${msg.id}" placeholder="输入回复内容...">
+                    <button onclick="sendReply(${msg.id})">回复</button>
+                    <button class="danger" onclick="deleteMessage(${msg.id})" style="background:#dc3545;">删除留言</button>
+                </div>
+            </div>
+        `).join("");
+    }
+    
+    function deleteMessage(messageId) {
+        if (confirm("确定要删除这条留言吗？")) {
+            db.messages = db.messages.filter(m => m.id !== messageId);
+            saveData();
+            renderMessagesManage();
+            renderReaderUI();
+            updateStatistics();
+            alert("留言已删除");
+        }
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function sendReply(messageId) {
+        let replyInput = document.getElementById(`replyInput_${messageId}`);
+        let replyText = replyInput.value.trim();
+        if (!replyText) { alert("请输入回复内容"); return; }
+        let msg = db.messages.find(m => m.id === messageId);
+        if (msg) {
+            msg.reply = replyText;
+            msg.replyTime = new Date().toLocaleString();
+            saveData();
+            renderMessagesManage();
+            renderReaderUI();
+            alert("回复已发送");
+        }
+        replyInput.value = "";
+    }
+    
+    // 宿舍考核
+    function updateFilterOptions() {
+        let monthSet = new Set(), buildingSet = new Set();
+        db.dormRecords.forEach(r => { if (r.month) monthSet.add(r.month); if (r.build) buildingSet.add(r.build); });
+        let monthSelect = document.getElementById("filterMonth");
+        if (monthSelect) {
+            monthSelect.innerHTML = '<option value="all">全部月份</option>';
+            Array.from(monthSet).sort().reverse().forEach(m => monthSelect.innerHTML += `<option value="${m}">${m}</option>`);
+        }
+        let buildingSelect = document.getElementById("filterBuilding");
+        if (buildingSelect) {
+            buildingSelect.innerHTML = '<option value="all">全部楼栋</option>';
+            Array.from(buildingSet).forEach(b => buildingSelect.innerHTML += `<option value="${b}">${b}</option>`);
+        }
+    }
+    
+    let currentFilter = { month: "all", building: "all" };
+    function applyFilter() {
+        currentFilter.month = document.getElementById("filterMonth").value;
+        currentFilter.building = document.getElementById("filterBuilding").value;
+        renderDormList();
+    }
+    
+    function getFilteredRecords() {
+        let filtered = [...db.dormRecords];
+        if (currentFilter.month !== "all") filtered = filtered.filter(r => r.month === currentFilter.month);
+        if (currentFilter.building !== "all") filtered = filtered.filter(r => r.build === currentFilter.building);
+        return filtered;
+    }
+    
+    function renderDormList() {
+        let filtered = getFilteredRecords();
+        let area = document.getElementById("dormListArea");
+        if (!area) return;
+        if (filtered.length === 0) { area.innerHTML = "暂无宿舍考核记录"; document.getElementById("totalBuildings").innerText = "0"; document.getElementById("totalDorms").innerText = "0"; document.getElementById("avgScore").innerText = "0"; return; }
+        let uniqueBuildings = new Set(filtered.map(r => r.build));
+        document.getElementById("totalBuildings").innerText = uniqueBuildings.size;
+        document.getElementById("totalDorms").innerText = filtered.length;
+        document.getElementById("avgScore").innerText = (filtered.reduce((sum, r) => sum + r.score, 0) / filtered.length).toFixed(1);
+        area.innerHTML = filtered.map((d, idx) => { let originalIdx = db.dormRecords.indexOf(d); return `<div class="file-item">🏠 ${d.build}-${d.num} | ${d.score}分 | 📅 ${d.month}${d.photo ? `<img src="${d.photo}" class="preview-img" style="width:40px;height:40px;">` : ""}<button onclick="deleteDorm(${originalIdx})">删除</button></div>`; }).join("");
+    }
+    
+    function addDormRecord() {
+        let build = document.getElementById("dormBuild").value.trim(), num = document.getElementById("dormNum").value.trim(), score = parseInt(document.getElementById("dormScore").value), month = document.getElementById("dormMonth").value;
+        if (!build || !num || isNaN(score)) return alert("请完整填写楼栋、宿舍号、分数");
+        let photoFile = document.getElementById("dormPhoto").files[0];
+        let monthDisplay = month.replace("-", "年") + "月";
+        if (photoFile) {
+            let reader = new FileReader();
+            reader.onload = function(e) { db.dormRecords.push({ build, num, score, month: monthDisplay, date: new Date().toLocaleString(), photo: e.target.result }); saveData(); updateFilterOptions(); renderDormList(); updateStatistics(); };
+            reader.readAsDataURL(photoFile);
+        } else { db.dormRecords.push({ build, num, score, month: monthDisplay, date: new Date().toLocaleString(), photo: null }); saveData(); updateFilterOptions(); renderDormList(); updateStatistics(); }
+        document.getElementById("dormBuild").value = ""; document.getElementById("dormNum").value = ""; document.getElementById("dormScore").value = ""; document.getElementById("dormPhoto").value = "";
+    }
+    
+    function deleteDorm(idx) { if (confirm("确定删除这条考核记录？")) { db.dormRecords.splice(idx, 1); saveData(); updateFilterOptions(); renderDormList(); updateStatistics(); } }
+    function exportDormExcel() { let filtered = getFilteredRecords(); let csv = "楼栋,宿舍号,分数,考核年月\n" + filtered.map(d => `${d.build},${d.num},${d.score},${d.month}`).join("\n"); let a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv])); a.download = `宿舍考核.csv`; a.click(); }
+    
+    function renderAll() {
+        if (!currentUser) return;
+        if (currentUser.role === "reader") renderReaderUI();
+        else { renderEditorUI(); renderDormList(); renderMessagesManage(); updateStatistics(); }
+    }
+    
+    function renderReaderUI() {
+        let noticeDiv = document.getElementById("noticeBoard");
+        if (noticeDiv) noticeDiv.innerHTML = db.notices.map(n => `<div>📢 ${n}</div>`).join("");
+        let templateDiv = document.getElementById("templateArea");
+        if (templateDiv) templateDiv.innerHTML = db.templates.map(t => `<div>📎 ${t.name} <button onclick="alert('下载:${t.name}')">下载</button></div>`).join("");
+        let msgDiv = document.getElementById("msgList");
+        if (msgDiv) {
+            if (db.messages.length === 0) { msgDiv.innerHTML = "暂无留言"; }
+            else {
+                msgDiv.innerHTML = db.messages.map(msg => `
+                    <div style="border-bottom:1px solid #e0d0a0; padding:10px; margin-bottom:8px; background:#faf7e4; border-radius:12px;">
+                        <div style="font-size:12px; color:#666;">${msg.name} · ${msg.time || "刚刚"}</div>
+                        <div style="margin:8px 0;">${escapeHtml(msg.content)}</div>
+                        ${msg.reply ? `<div style="margin-top:8px; padding-left:12px; border-left:3px solid #c9a03d;"><i class="fas fa-reply"></i> <strong>宿管部回复：</strong> ${escapeHtml(msg.reply)}</div>` : ''}
+                    </div>
+                `).join("");
+            }
+        }
+        let reworkDiv = document.getElementById("reworkArea");
+        let myWorks = db.competitions.filter(c => c.stuId === currentUser.stuId);
+        let myReworks = db.reworks.filter(r => myWorks.some(w => w.title === r.title));
+        if (reworkDiv) reworkDiv.innerHTML = myReworks.map(r => `<div>✉️ 《${r.title}》退修：${r.comment}</div>`).join("") || "暂无";
+    }
+    
+    function renderEditorUI() {
+        let compContainer = document.getElementById("competitionManageList");
+        if (compContainer) compContainer.innerHTML = db.competitions.map(c => {
+            let fileType = c.fileName ? getFileType(c.fileName) : 'other';
+            let previewBtn = c.fileData ? `<button class="preview-btn" onclick="previewFile('${c.fileData}', '${fileType}', '${c.fileName}')"><i class="fas fa-eye"></i> 预览</button>` : '';
+            return `<div class="file-item"><div><strong>${c.title}</strong> (${c.name}/${c.stuId})<br>分类:${c.category || "未分类"} | 状态:${c.status} | 分数:${c.scores?.join(",")||"无"}<br>文件:${c.fileName || "无"} ${previewBtn}<br><button onclick="showReworkModal(${c.id})">退修</button> <button onclick="deleteComp(${c.id})">删除</button> <button onclick="markProcessed(${c.id})">已处理</button></div></div>`;
+        }).join("");
+        
+        let archContainer = document.getElementById("archiveManageList");
+        if (archContainer) archContainer.innerHTML = db.archives.map(a => {
+            let fileType = a.fileName ? getFileType(a.fileName) : 'other';
+            let previewBtn = a.fileData ? `<button class="preview-btn" onclick="previewFile('${a.fileData}', '${fileType}', '${a.fileName}')"><i class="fas fa-eye"></i> 预览</button>` : '';
+            return `<div class="file-item"><span>📄 ${a.name} 状态:${a.status||"待审"} ${previewBtn}</span><div><button onclick="acceptArchive(${a.id})">收录</button><button onclick="deleteArchive(${a.id})">删除</button></div></div>`;
+        }).join("");
+        
+        let wpDiv = document.getElementById("workPlanDisplay");
+        if (wpDiv) wpDiv.innerText = db.workPlan;
+        let wlDiv = document.getElementById("workLogArea");
+        if (wlDiv) wlDiv.innerHTML = db.workLogs.map(l => `📋 ${l}`).join("<br>") || "暂无";
+    }
+    
+    function submitCompetition() {
+        let title = document.getElementById("workTitle").value;
+        if (!title) return alert("请填写作品名");
+        let file = document.getElementById("compFile").files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                db.competitions.push({ id: Date.now(), name: currentUser.realName, stuId: currentUser.stuId, title, phone: currentUser.phone, fileName: file.name, fileData: e.target.result, status: "待审核", scores: [], reworkMsg: "", category: db.compCategoryRule, time: new Date().toLocaleString() });
+                saveData(); renderEditorUI(); updateStatistics(); alert("提交成功");
+            };
+            reader.readAsDataURL(file);
+        } else {
+            db.competitions.push({ id: Date.now(), name: currentUser.realName, stuId: currentUser.stuId, title, phone: currentUser.phone, fileName: "无文件", fileData: null, status: "待审核", scores: [], reworkMsg: "", category: db.compCategoryRule, time: new Date().toLocaleString() });
+            saveData(); renderEditorUI(); updateStatistics(); alert("提交成功");
+        }
+        document.getElementById("workTitle").value = "";
+        document.getElementById("compFile").value = "";
+        document.getElementById("compPreview").innerHTML = "";
+    }
+    
+    function submitArchive() {
+        let title = document.getElementById("dataTitle").value;
+        if (!title) return alert("请输入资料名称");
+        let file = document.getElementById("dataFile").files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) { db.archives.push({ id: Date.now(), name: title, fileName: file.name, fileData: e.target.result, status: "待审核", uploader: currentUser.realName, category: db.archiveCategoryRule, time: new Date().toLocaleString() }); saveData(); renderEditorUI(); updateStatistics(); alert("已上传"); };
+            reader.readAsDataURL(file);
+        } else { db.archives.push({ id: Date.now(), name: title, fileName: "无文件", fileData: null, status: "待审核", uploader: currentUser.realName, category: db.archiveCategoryRule, time: new Date().toLocaleString() }); saveData(); renderEditorUI(); updateStatistics(); alert("已上传"); }
+        document.getElementById("dataTitle").value = "";
+        document.getElementById("dataFile").value = "";
+    }
+    
+    function queryScore() {
+        let name = document.getElementById("queryName").value, stuId = document.getElementById("queryStuId").value;
+        let myWorks = db.competitions.filter(c => c.name === name && c.stuId === stuId);
+        let html = myWorks.map(w => `<div>《${w.title}》 状态:${w.status} 分数:${w.scores?.join(",")||"无"} 退修:${w.reworkMsg||"无"}</div>`).join("");
+        document.getElementById("queryResult").innerHTML = html || "未找到";
+    }
+    
+    function sendMessage() { 
+        let msg = document.getElementById("msgText").value; 
+        if (msg) {
+            db.messages.push({ id: Date.now(), name: currentUser.realName, stuId: currentUser.stuId, content: msg, time: new Date().toLocaleString(), reply: null });
+            saveData(); renderReaderUI(); if (currentUser.role !== "reader") renderMessagesManage(); updateStatistics();
+            document.getElementById("msgText").value = "";
+            alert("留言已提交");
+        }
+    }
+    
+    function publishNotice() { let txt = document.getElementById("editorNotice").value; if(txt){ db.notices.push(txt); saveData(); renderReaderUI(); alert("已发布"); } }
+    function applyCompCategory() { let rule = document.getElementById("compCategoryInput").value; if(rule){ db.compCategoryRule = rule; db.competitions.forEach(c=>c.category=rule); saveData(); renderEditorUI(); alert("分类已应用到所有作品"); } }
+    function addScoreToFirst() { let score = parseInt(document.getElementById("reviewScore").value); if(!isNaN(score) && db.competitions.length){ if(!db.competitions[0].scores) db.competitions[0].scores=[]; db.competitions[0].scores.push(score); saveData(); renderEditorUI(); } }
+    function calculateRanking() { let works = db.competitions.filter(c=>c.scores && c.scores.length>0); let res = works.map(w=>`${w.title}: 平均${(w.scores.reduce((a,b)=>a+b,0)/w.scores.length).toFixed(2)}`); document.getElementById("rankingResult").innerHTML = res.join("<br>") || "暂无"; }
+    function showReworkModal(id) { let msg = prompt("退修意见:"); if(msg){ let item=db.competitions.find(c=>c.id===id); if(item){ item.reworkMsg=msg; db.reworks.push({title:item.title, comment:msg}); saveData(); renderEditorUI(); renderReaderUI(); } } }
+    function deleteComp(id) { if(confirm("确定删除该作品？")){ db.competitions = db.competitions.filter(c=>c.id!==id); saveData(); renderEditorUI(); renderReaderUI(); updateStatistics(); } }
+    function markProcessed(id) { let item=db.competitions.find(c=>c.id===id); if(item){ item.status="已处理"; saveData(); renderEditorUI(); renderReaderUI(); } }
+    function acceptArchive(id) { let a = db.archives.find(a=>a.id===id); if(a){ a.status="已收录"; saveData(); renderEditorUI(); } }
+    function deleteArchive(id) { if(confirm("确定删除该档案？")){ db.archives = db.archives.filter(a=>a.id!==id); saveData(); renderEditorUI(); updateStatistics(); } }
+    function applyArchiveCategory() { let rule = document.getElementById("archiveCustomClass").value; if(rule){ db.archiveCategoryRule = rule; db.archives.forEach(a=>a.category=rule); saveData(); renderEditorUI(); } }
+    function uploadEditorArchive() { let file = document.getElementById("editorUploadArchive").files[0]; if(file){ let reader = new FileReader(); reader.onload = function(e) { db.archives.push({ id:Date.now(), name:file.name, fileName:file.name, fileData:e.target.result, status:"已收录", uploader:"编辑端", category:db.archiveCategoryRule, time:new Date().toLocaleString() }); saveData(); renderEditorUI(); updateStatistics(); alert("已添加"); }; reader.readAsDataURL(file); } }
+    function saveWorkPlan() { let plan = document.getElementById("workPlanText").value; if(plan){ db.workPlan = plan; saveData(); renderEditorUI(); } }
+    function addWorkLog() { let log = document.getElementById("logText").value; if(log){ db.workLogs.unshift(new Date().toLocaleString() + " " + log); saveData(); renderEditorUI(); updateStatistics(); document.getElementById("logText").value=""; } }
+    
+    function updateStatistics() {
+        document.getElementById("statCompetitions").innerText = db.competitions.length;
+        document.getElementById("statArchives").innerText = db.archives.length;
+        document.getElementById("statDorms").innerText = db.dormRecords.length;
+        document.getElementById("statMessages").innerText = db.messages.length;
+        document.getElementById("statNotices").innerText = db.notices.length;
+        document.getElementById("statLogs").innerText = db.workLogs.length;
+        calculateStorageSize();
+    }
+    
+    function clearCompetitions() { if (confirm("确定清空所有参赛作品？")) { db.competitions = []; saveData(); renderEditorUI(); updateStatistics(); alert("已清空"); } }
+    function clearArchives() { if (confirm("确定清空所有档案？")) { db.archives = []; saveData(); renderEditorUI(); updateStatistics(); alert("已清空"); } }
+    function clearDormRecords() { if (confirm("确定清空所有宿舍考核？")) { db.dormRecords = []; saveData(); renderDormList(); updateFilterOptions(); updateStatistics(); alert("已清空"); } }
+    function clearMessages() { if (confirm("确定清空所有留言？")) { db.messages = []; saveData(); renderMessagesManage(); renderReaderUI(); updateStatistics(); alert("已清空"); } }
+    function clearAllData() { if (confirm("⚠️ 警告：清空所有数据？")) { if (confirm("最后确认：数据永久丢失！")) { db.competitions = []; db.archives = []; db.dormRecords = []; db.messages = []; db.reworks = []; db.workLogs = []; db.notices = ["系统数据已清空"]; saveData(); renderEditorUI(); renderDormList(); renderMessagesManage(); renderReaderUI(); updateFilterOptions(); updateStatistics(); alert("所有数据已清空"); } } }
+    
+    function initDragDrop() {
+        let zone = document.getElementById("compDropZone"), input = document.getElementById("compFile");
+        if (zone && input) {
+            zone.addEventListener("dragover", e => { e.preventDefault(); zone.style.background = "#f5e6b8"; });
+            zone.addEventListener("dragleave", () => { zone.style.background = "#fef9e6"; });
+            zone.addEventListener("drop", e => { e.preventDefault(); zone.style.background = "#fef9e6"; if (e.dataTransfer.files.length) input.files = e.dataTransfer.files; });
+        }
+    }
+    
+    loadStudents();
+    checkAutoLogin();
+    initDragDrop();
+</script>
+</body>
+</html>
